@@ -1,0 +1,75 @@
+app-id: org.cadzinho.CadZinho
+runtime: org.freedesktop.Platform
+runtime-version: '21.08'
+sdk: org.freedesktop.Sdk
+command: cadzinho
+finish-args:
+  - --socket=wayland
+  - --socket=x11
+  - --filesystem=home
+  - --device=dri
+
+modules:
+  - name: CadZinho
+    no-autogen: true
+    no-make-install: true
+    sources:
+      - type: archive
+        url: https://github.com/zecruel/CadZinho/archive/refs/tags/0.1.0-alpha.tar.gz
+        sha256: 64f5722d9fcb7ec08093f5b987fac606e5fb85eab947dfbd51c936ab5742c09c
+    post-install:
+      - install cadzinho -t ${FLATPAK_DEST}/bin/
+    modules:
+      - name: Lua
+        buildsystem: simple
+        build-commands:
+          - make linux install INSTALL_TOP=${FLATPAK_DEST}
+        sources:
+          - type: archive
+            url: https://www.lua.org/ftp/lua-5.4.3.tar.gz
+            sha256: f8612276169e3bfcbcfb8f226195bfc6e466fe13042f1076cbde92b7ec96bbfb
+          - type: patch
+            path: lua-so.patch
+        cleanup:
+          - /bin/lua*
+      - name: SDL2
+        buildsystem: autotools
+        cleanup:
+          - /bin
+          - /include
+          - /lib/pkgconfig
+          - /share
+        sources:
+          - type: archive
+            url: https://www.libsdl.org/release/SDL2-2.0.20.tar.gz
+            sha256: c56aba1d7b5b0e7e999e4a7698c70b63a3394ff9704b5f6e1c57e0c16f04dd06
+            x-checker-data:
+              type: anitya
+              project-id: 4779
+              stable-only: true
+              url-template: https://www.libsdl.org/release/SDL2-$version.tar.gz
+      - name: glu
+        config-opts:
+          - --disable-static
+        sources:
+          - type: archive
+            url: https://mesa.freedesktop.org/archive/glu/glu-9.0.2.tar.xz
+            sha256: 6e7280ff585c6a1d9dfcdf2fca489251634b3377bfc33c29e4002466a38d02d4
+      - name: glew
+        no-autogen: true
+        make-args:
+          - GLEW_PREFIX=${FLATPAK_DEST}
+          - GLEW_DEST=${FLATPAK_DEST}
+          - LIBDIR=${FLATPAK_DEST}/lib
+          - CFLAGS.EXTRA:=${CFLAGS} -fPIC
+          - LDFLAGS.EXTRA=${LDFLAGS}
+        make-install-args:
+          - GLEW_PREFIX=${FLATPAK_DEST}
+          - GLEW_DEST=${FLATPAK_DEST}
+          - LIBDIR=${FLATPAK_DEST}/lib
+          - CFLAGS.EXTRA:=${CFLAGS} -fPIC
+          - LDFLAGS.EXTRA=${LDFLAGS}
+        sources:
+          - type: archive
+            url: https://github.com/nigels-com/glew/releases/download/glew-2.2.0/glew-2.2.0.tgz
+            sha256: d4fc82893cfb00109578d0a1a2337fb8ca335b3ceccf97b97e5cc7f08e4353e1
